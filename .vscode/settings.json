@@ -1,0 +1,7 @@
+{
+    "editor.formatOnSave": false,
+    "files.trimTrailingWhitespace": false,
+    "code-runner.executorMap": {
+        "c": "cd $dir && make && ./btest"
+    },
+}

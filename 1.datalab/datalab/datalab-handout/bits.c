@@ -52,6 +52,7 @@ INTEGER CODING RULES:
   Each "Expr" may consist of multiple operators. You are not restricted to
   one operator per line.
 
+  禁止类的要求如下, 但是我并不是为了完成作业, 所以为了提高代码的可读性, 还是会使用宏之类的
   You are expressly forbidden to:
   1. Use any control constructs such as if, do, while, for, switch, etc.
   2. Define or use any macros.
@@ -143,7 +144,8 @@ NOTES:
  *   Rating: 1
  */
 int bitXor(int x, int y) {
-  return 2;
+  // (~x & y) | (~y & x) --> ~((~(~x & y)) & (~(x & ~y)));
+  return ~((~(~x & y)) & (~(x & ~y)));
 }
 /* 
  * tmin - return minimum two's complement integer 
@@ -151,10 +153,10 @@ int bitXor(int x, int y) {
  *   Max ops: 4
  *   Rating: 1
  */
+#define INTMIN (0x80u << 24)  // 1个op
 int tmin(void) {
-
-  return 2;
-
+  // return 1 << 31;
+  return INTMIN;
 }
 //2
 /*
@@ -164,8 +166,24 @@ int tmin(void) {
  *   Max ops: 10
  *   Rating: 1
  */
+
+#define equal(x, y) (!((x) ^ (y)))
+#define toBool(x) (!!(x))
+// 如果采用 !((~x)+(~x)); 想利用 0x80000000 + 0x80000000 溢出判断为 0x80000000 的话, 需要关闭编译优化 -O0, 否则如果 a = 0, res = !a 还是 0 很奇怪
+// https://stackoverflow.com/questions/74541471/datalab-of-csappistmax-seems-unoperative
+// 查阅网络发现 Signed integer overflow is undefined behavior -- so that's undefined behavior right there :) -
+// 所以 !((~x)+(~x)); 不行
+// int a = ~x + (~x);
+// int res = !a;
+// return (!!(~x)) & res;
+// 上面不行的话看下面
+// 参考 https://jackshaw2333.github.io/2020/09/01/CSAPP-datalab/
+// ~x 和 x + 1 相同, 直接使用异或取反运算
 int isTmax(int x) {
-  return 2;
+  // 方法1 不使用宏
+  // return !((x + 1) ^ (~x)) & !!(~x);
+  // 方法2 使用宏
+  return equal(x + 1, ~x) && toBool(~x);
 }
 /* 
  * allOddBits - return 1 if all odd-numbered bits in word set to 1
@@ -176,7 +194,10 @@ int isTmax(int x) {
  *   Rating: 2
  */
 int allOddBits(int x) {
-  return 2;
+  // 方法1 不使用宏
+  // return !((x & 0xAAAAAAAA) ^ 0xAAAAAAAA);
+  // 方法2 使用宏
+  return equal(x & 0xAAAAAAAA, 0xAAAAAAAA);
 }
 /* 
  * negate - return -x 
@@ -186,7 +207,7 @@ int allOddBits(int x) {
  *   Rating: 2
  */
 int negate(int x) {
-  return 2;
+  return ~x + 1;
 }
 //3
 /* 
@@ -198,9 +219,27 @@ int negate(int x) {
  *   Max ops: 15
  *   Rating: 3
  */
+#define isNegative(x) toBool((x) & 0x80000000)
+#define isPositive(x) (!isNegative(x))
+#define substraction(x, y) ((x) + (~(y) + 1))
+
 int isAsciiDigit(int x) {
-  return 2;
+  // 方法1 不使用宏
+  // return (!((x + (~0x30 + 1)) & 0x80000000)) & (!((0x39 + (~x + 1)) & 0x80000000));
+  // 方法2 使用宏
+  return isPositive(substraction(x, 0x30)) && isPositive(substraction(0x39, x));
 }
+
+// https://jackshaw2333.github.io/2020/09/01/CSAPP-datalab/
+// 参考链接方法
+/* int allOddBits(int x) {
+    x = (x >> 16) & x;
+    x = (x >> 8) & x;
+    x = (x >> 4) & x;
+    x = (x >> 2) & x;
+    return (x >> 1) & 1;  // &1 is to eliminate the consequences caused by arithmetic right shift 
+} */
+
 /* 
  * conditional - same as x ? y : z 
  *   Example: conditional(2,4,5) = 4
@@ -209,7 +248,12 @@ int isAsciiDigit(int x) {
  *   Rating: 3
  */
 int conditional(int x, int y, int z) {
-  return 2;
+  // 方法1
+  // int mask = ~((int)(!x)) + 1;  // if x==0, mask = 0x0; else mask = 0xff; `(int)` is to elimate compiler warning
+  // return (y & ~mask) | (z & mask);
+  // 方法2
+  int mask = negate(toBool(x));
+  return (y & mask) | (z & ~mask);
 }
 /* 
  * isLessOrEqual - if x <= y  then return 1, else return 0 
@@ -218,8 +262,15 @@ int conditional(int x, int y, int z) {
  *   Max ops: 24
  *   Rating: 3
  */
+inline static int less(int x, int y)
+{
+    return conditional(isNegative(x) ^ isNegative(y) /* 判断符号位是否不一致 */, isNegative(x), isNegative(substraction(x, y)));
+}
 int isLessOrEqual(int x, int y) {
-  return 2;
+  // 方法1
+  // return equal(x, y) | (isNegative(x) & isPositive(y)) | (!(isPositive(x) & isNegative(y)) & isNegative(substraction(x, y)));
+  // 方法2 优化
+  return equal(x, y) | less(x, y);
 }
 //4
 /* 
@@ -231,7 +282,7 @@ int isLessOrEqual(int x, int y) {
  *   Rating: 4 
  */
 int logicalNeg(int x) {
-  return 2;
+  return ((x | (~x + 1)) >> 31) + 1;
 }
 /* howManyBits - return the minimum number of bits required to represent x in
  *             two's complement
