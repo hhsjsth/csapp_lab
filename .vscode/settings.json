@@ -4,4 +4,8 @@
     "code-runner.executorMap": {
         "c": "cd $dir && make && ./btest"
     },
+    "lldb.displayFormat": "auto",
+    "lldb.showDisassembly": "auto",
+    "lldb.dereferencePointers": true,
+    "lldb.consoleMode": "commands",
 }
