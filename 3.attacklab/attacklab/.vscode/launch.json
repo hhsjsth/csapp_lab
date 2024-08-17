@@ -1,0 +1,50 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "GDB Debug for ctarget",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/target1/ctarget",
+            "args": [
+                "-q",
+                "-i${workspaceFolder}/target1/ctarget.txt.raw",
+            ],
+            // "stopAtEntry": true,
+            "cwd": "${workspaceFolder}/target1",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                // {
+                //     "description": "Set Disassembly Flavor to Intel",
+                //     "text": "-gdb-set disassembly-flavor intel",
+                //     "ignoreFailures": true
+                // }
+            ]
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "LLDB Debug for ctarget",
+            "program": "${workspaceFolder}/target1/ctarget",
+            "args": [
+                "-q",
+                "-i${workspaceFolder}/target1/ctarget.txt.raw",
+            ],
+            "cwd": "${workspaceFolder}/target1",
+            // "stopOnEntry": true
+            // "preRunCommands": [
+            //     "${workspaceFolder}/target1/hex2raw < ctarget.txt > ctarget.txt.raw;"
+            // ]
+        }
+    ]
+}
