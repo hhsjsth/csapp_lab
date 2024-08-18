@@ -45,6 +45,18 @@
             // "preRunCommands": [
             //     "${workspaceFolder}/target1/hex2raw < ctarget.txt > ctarget.txt.raw;"
             // ]
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "LLDB Debug for rtarget",
+            "program": "${workspaceFolder}/target1/rtarget",
+            "args": [
+                "-q",
+                "-i${workspaceFolder}/target1/rtarget.txt.raw",
+            ],
+            "cwd": "${workspaceFolder}/target1",
+            // "stopOnEntry": true
         }
     ]
 }
